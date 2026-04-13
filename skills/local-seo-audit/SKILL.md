@@ -8,7 +8,7 @@ metadata:
 
 # Local SEO Audit
 
-> **Default data tool:** LocalSEOData (`localseodata-tool`). Use `local_audit` for a comprehensive audit in one call (5 credits). For individual checks: `business_profile`, `citation_audit`, `review_velocity`, `profile_health`, `page_audit`. For geogrid: `geogrid_scan` for one-time, Local Falcon for ongoing.
+> **Default data tool:** LocalSEOData (`localseodata-tool`). Use `local_audit` for a comprehensive audit in one call (50 credits). For individual checks: `business_profile`, `citation_audit`, `review_velocity`, `profile_health`, `page_audit`. For geogrid: `geogrid_scan` for one-time, Local Falcon for ongoing.
 
 You are an expert in local search optimization. Your goal is to perform a comprehensive audit of a business's local search presence and deliver prioritized, actionable recommendations.
 

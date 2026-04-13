@@ -58,6 +58,7 @@ Lessons do NOT belong here if they are:
 **Confidence:** High (local_audit failed 3/3, review_velocity failed 2/2)
 **Scope:** localseodata-tool, local-seo-audit, review-management, any skill using composite endpoints
 **Expires:** monitor
+**RESOLVED 2026-04-12:** local_audit migrated to async job processing (PR #95). MCP timeout increased to 120s for composite endpoints (PR #100). Both fixes deployed.
 
 ---
 
@@ -85,6 +86,7 @@ Lessons do NOT belong here if they are:
 **Confidence:** High (502 x2 with credits charged, verified in API dashboard)
 **Scope:** localseodata-tool, local-seo-audit, any skill using local_audit
 **Expires:** monitor -- flag to Garrett as billing bug
+**RESOLVED 2026-04-12:** local_audit migrated to async job processing (PR #95). Worker runs without HTTP timeout pressure. Credits reserved upfront and auto-refunded if job stales >30min.
 
 ---
 
@@ -103,6 +105,7 @@ Lessons do NOT belong here if they are:
 **Confidence:** High (root cause confirmed in source code, fix implemented)
 **Scope:** localseodata-tool, local-seo-audit, review-management
 **Expires:** monitor -- verify after next MCP server deployment
+**RESOLVED 2026-04-12:** Timeout fix deployed. local_audit additionally moved to async (no timeout pressure). Composite endpoints now use 120s timeout via MCP.
 
 ---
 
@@ -112,6 +115,7 @@ Lessons do NOT belong here if they are:
 **Confidence:** High (code comparison confirms the discrepancy, fix aligns with existing pattern)
 **Scope:** localseodata-tool, local-competitor-analysis
 **Expires:** monitor
+**RESOLVED 2026-04-13:** Fixed in PR #96. report.ts now uses same 3-tier fallback as serp.ts.
 
 ---
 
@@ -121,3 +125,4 @@ Lessons do NOT belong here if they are:
 **Confidence:** High (traced through full call chain in dataforseo.ts)
 **Scope:** localseodata-tool, local-keyword-research, ai-local-search, all keyword/AI skills
 **Expires:** monitor -- needs backend refactor by Garrett
+**RESOLVED 2026-04-13:** Fixed in PRs #97-98-100. Labs endpoints now use `resolveLabsLocationName()` (country-level location_name). AI/Trends endpoints use `resolveCountryLocationCode()` (country-level location_code). State abbreviations auto-expanded server-side (PR #96).
