@@ -193,7 +193,9 @@ For scheduled tasks, use Claude Code on the web at claude.ai/code/scheduled — 
 
 ### API (Custom Skills)
 
-Upload via `/v1/skills` endpoint — see Anthropic docs for details.
+Include skill content directly in your system prompt. Fetch the relevant
+SKILL.md files from this repo and pass them as system context in your
+`/v1/messages` request.
 
 ### Other Platforms (OpenClaw, Perplexity Computer, custom agents)
 
