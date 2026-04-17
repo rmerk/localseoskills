@@ -2,7 +2,7 @@
 
 Fifteen scheduled task templates that run against a client brief on a recurring schedule. Tasks complement the skills: skills describe *what* to do on demand, tasks describe *what to do autonomously on a schedule*.
 
-Each task is a directory containing a `TASK.md` with frontmatter describing its schedule, approval tier, required skills, and required MCP servers. Agents that support the Agent Skills spec discover tasks automatically once the skills are installed.
+Each task is a directory containing a `TASK.md` with frontmatter describing its schedule, approval tier, required skills, and required MCP servers. Once the skills are installed, agents can discover and load tasks from this directory; wiring tasks into a scheduler is host-agent-specific.
 
 ## Approval tiers
 

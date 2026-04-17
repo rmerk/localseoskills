@@ -104,12 +104,14 @@ Skills are platform-agnostic markdown. Any agent that reads the [Agent Skills sp
 
 ## Quick Start
 
-Once installed, just mention any local business. Claude picks the right skills automatically.
+Before your first audit, connect a data source. [LocalSEOData](https://localseodata.com) is the default and covers 36 endpoints in one MCP connection — see [Default Data Source](#default-data-source-localseodata) below for the setup link. Without a data source connected the skills still load, but the first audit will fail with a clear message telling you which MCP is missing.
+
+Once installed and connected, just mention any local business. Claude picks the right skills automatically.
 
 ```
 You: "Audit Mike's Plumbing in Buffalo"
 → brief asks 5 quick questions
-→ local-seo-audit + citation_audit + reputation_audit
+→ local-seo-audit + localseodata-tool (citation_audit, reputation_audit)
 → 47 issues found · report drafted · brief initialized
 
 You: "Why am I not in the map pack?"
@@ -133,11 +135,10 @@ You: "Pick up where we left off on Keystone Insurance"
 
 ## What's Inside
 
-- **26 strategy skills:** GBP optimization, audits, citations, reviews, keywords, geogrid, content, AI visibility, multi-location SEO, client deliverables, and more
+- **26 strategy skills:** GBP optimization, audits, citations, reviews, keywords, geogrid, content, AI visibility, multi-location SEO, client deliverables, a dispatch router that picks the right skills for every request, and more
 - **12 tool skills:** MCP integrations for [LocalSEOData](https://localseodata.com), Local Falcon, LSA Spy, SerpAPI, Semrush, Ahrefs, BrightLocal, DataForSEO, Whitespark, Google Search Console, Google Analytics, and Screaming Frog
 - **15 scheduled task templates:** monitoring, reporting, execution, and prospecting workflows that run on Anthropic's cloud, even when your computer is off
 - **1 brief system:** persistent work state per business and location, compounding history over time
-- **1 dispatch skill:** routes every request to the right skill combination automatically
 - **3 foundational docs:** how local search works, glossary, and tool routing
 - **20 years of local SEO practice**, encoded as markdown any agent can read
 
