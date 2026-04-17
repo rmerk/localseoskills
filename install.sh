@@ -129,6 +129,28 @@ cleanup() {
 main() {
   command -v git >/dev/null 2>&1 || fail "git is required but not found. Install git and try again."
 
+  # Pre-install path guard. Install is not destructive like uninstall, but
+  # an admin running `install.sh` with LSS_INSTALL_DIR pointing at a system
+  # root would create a skills directory there. Port the core refusals from
+  # uninstall.sh so this class of mistake fails before we mkdir anything.
+  case "/$INSTALL_DIR/" in
+    */../*) fail "Refusing to install to path with .. traversal: $INSTALL_DIR" ;;
+  esac
+  if [ -L "$INSTALL_DIR" ]; then
+    fail "Refusing to install into a symlink: $INSTALL_DIR"
+  fi
+  # Minimal blocklist (top-level only; install creates, not destroys, so the
+  # full prefix+case+symlink apparatus from uninstall is overkill here). The
+  # PS side has the same guard via Test-SafeInstallPath.
+  case "${INSTALL_DIR%/}" in
+    /|""|\
+    /root|/home|/Users|\
+    /usr|/etc|/var|/tmp|/bin|/sbin|/opt|/boot|/dev|/proc|/sys|/lib|/mnt|/srv|\
+    /run|/media|/lost+found|/snap|/selinux|/sysroot|\
+    /Library|/System|/Applications|/private|/cores|/Volumes|/Network|/.vol)
+      fail "Refusing to install to system path: $INSTALL_DIR" ;;
+  esac
+
   # Pre-flight writability check so custom LSS_INSTALL_DIR pointing somewhere
   # the user can't write (e.g. /opt/... without sudo) fails with a clear
   # message instead of a cryptic git or mv error later.
