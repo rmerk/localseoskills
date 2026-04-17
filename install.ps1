@@ -29,6 +29,69 @@ $InstallDir = if ($env:LSS_INSTALL_DIR) { $env:LSS_INSTALL_DIR } else { Join-Pat
 function Say($msg)  { Write-Host "> $msg" -ForegroundColor Green }
 function Fail($msg) { Write-Host "x $msg" -ForegroundColor Red; exit 1 }
 
+function Test-SafeInstallPath {
+    # Pre-install sanity guard. Install is not destructive like uninstall, but
+    # an admin running `install.ps1` with $env:LSS_INSTALL_DIR pointing at a
+    # system location would happily create a skills directory in
+    # C:\Windows\System32 or similar. Mirror the key refusals from
+    # uninstall.ps1's Test-SafePath so those locations get rejected here too.
+    param([string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { Fail "Refusing to install to empty path." }
+    if ($Path.Length -lt 10) { Fail "Refusing to install to suspiciously short path: $Path" }
+
+    $forward = $Path -replace '\\','/'
+    if ($forward -match '(^|/)\.\.(/|$)') {
+        Fail "Refusing to install to path with .. traversal: $Path"
+    }
+    if ($forward -match '(^|/)[^/]*~\d') {
+        Fail "Refusing to install to 8.3 short-name path: $Path (use the long form)"
+    }
+    if ($Path -match '^\\\\') {
+        Fail "Refusing to install to UNC or device path: $Path"
+    }
+
+    $blocked = @(
+        $env:SystemRoot,
+        $env:SystemDrive,
+        $env:ProgramFiles,
+        ${env:ProgramFiles(x86)},
+        $env:ProgramData,
+        "C:\", "C:\Windows", "C:\Windows\System32", "C:\Windows\SysWOW64",
+        "C:\Program Files", "C:\Program Files (x86)", "C:\ProgramData",
+        "/", "/usr", "/etc", "/var", "/bin", "/sbin", "/boot", "/dev",
+        "/proc", "/sys", "/Library", "/System", "/Applications", "/private"
+    ) | Where-Object { $_ }
+
+    $normalized = $Path.TrimEnd('\','/')
+    foreach ($b in $blocked) {
+        $bt = $b.TrimEnd('\','/')
+        if ([string]::Equals($normalized, $bt, [StringComparison]::OrdinalIgnoreCase)) {
+            Fail "Refusing to install to dangerous path: $Path (equals blocklisted $bt)"
+        }
+        if ($bt.Length -gt 0 -and $normalized.Length -gt $bt.Length) {
+            $prefix = $normalized.Substring(0, $bt.Length + 1)
+            if ([string]::Equals($prefix, $bt + '\', [StringComparison]::OrdinalIgnoreCase) -or
+                [string]::Equals($prefix, $bt + '/', [StringComparison]::OrdinalIgnoreCase)) {
+                # Allow the default /Users/<user> or C:\Users\<user> subtree by
+                # deferring to the trusted-home fast-allow used by uninstall.
+                $trustedHome = $null
+                try { $trustedHome = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile) } catch {}
+                if ($trustedHome) {
+                    $tht = $trustedHome.TrimEnd('\','/')
+                    if ($normalized.Length -gt $tht.Length) {
+                        $homePrefix = $normalized.Substring(0, $tht.Length + 1)
+                        if ([string]::Equals($homePrefix, $tht + '\', [StringComparison]::OrdinalIgnoreCase) -or
+                            [string]::Equals($homePrefix, $tht + '/', [StringComparison]::OrdinalIgnoreCase)) {
+                            continue
+                        }
+                    }
+                }
+                Fail "Refusing to install to dangerous path: $Path (nested under blocklisted $bt)"
+            }
+        }
+    }
+}
+
 function Invoke-Git {
     # $Args is a PowerShell reserved automatic variable. Using $GitArgs avoids
     # shadowing and the subtle misbehavior that causes in PS 5.1.
@@ -109,41 +172,55 @@ function Install-Fresh {
 function Update-Existing {
     Say "Existing install detected at $InstallDir, updating"
 
-    # Sanity check: the existing checkout's origin must actually be this repo.
-    # Without this, a misconfigured $env:LSS_INSTALL_DIR pointing at an
-    # unrelated git checkout would get `git reset --hard` against the WRONG
-    # origin's branch, silently destroying the user's work.
-    $originUrl = (& git -C "$InstallDir" remote get-url origin 2>$null)
-    $expected = @(
-        $RepoUrl,
-        ($RepoUrl -replace '\.git$',''),
-        (($RepoUrl -replace '\.git$','') + '.git'),
-        'git@github.com:garrettjsmith/localseoskills',
-        'git@github.com:garrettjsmith/localseoskills.git'
-    )
-    if (-not $originUrl -or -not ($expected -contains $originUrl)) {
-        Fail "Refusing to update: $InstallDir exists but its origin ($originUrl) is not $RepoUrl. Remove $InstallDir manually and rerun, or unset LSS_INSTALL_DIR."
-    }
+    # Localize $ErrorActionPreference around the bare `git` probes below.
+    # Under the script-wide `Stop` preference, PS 5.1 can treat git's stderr
+    # output (progress, info messages) as a terminating error even when the
+    # command succeeds. Each probe is followed by a check of $LASTEXITCODE
+    # or captured output, so we don't need Stop semantics during probing.
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        # Sanity check: the existing checkout's origin must actually be this
+        # repo. Without this, a misconfigured $env:LSS_INSTALL_DIR pointing
+        # at an unrelated git checkout would get `git reset --hard` against
+        # the WRONG origin's branch, silently destroying the user's work.
+        $originUrl = (& git -C "$InstallDir" remote get-url origin 2>$null)
+        $expected = @(
+            $RepoUrl,
+            ($RepoUrl -replace '\.git$',''),
+            (($RepoUrl -replace '\.git$','') + '.git'),
+            'git@github.com:garrettjsmith/localseoskills',
+            'git@github.com:garrettjsmith/localseoskills.git',
+            'ssh://git@github.com/garrettjsmith/localseoskills',
+            'ssh://git@github.com/garrettjsmith/localseoskills.git'
+        )
+        if (-not $originUrl -or -not ($expected -contains $originUrl)) {
+            Fail "Refusing to update: $InstallDir exists but its origin ($originUrl) is not $RepoUrl. Remove $InstallDir manually and rerun, or unset LSS_INSTALL_DIR."
+        }
 
-    # Refuse to clobber uncommitted local changes inside the install dir.
-    # Covers tracked-modified (diff), staged (diff --cached), AND untracked
-    # files not gitignored. Without the untracked check, a user's personal
-    # note or experimental file dropped into the install dir would be
-    # silently wiped by `git reset --hard`. `--exclude-standard` respects
-    # .gitignore, so briefs/<client>/ and .env remain invisible here.
-    & git -C "$InstallDir" diff --quiet *> $null
-    $dirty = ($LASTEXITCODE -ne 0)
-    & git -C "$InstallDir" diff --cached --quiet *> $null
-    $staged = ($LASTEXITCODE -ne 0)
-    $untracked = (& git -C "$InstallDir" ls-files --others --exclude-standard 2>$null)
-    if ($dirty -or $staged -or $untracked) {
-        Fail "Refusing to update: $InstallDir has uncommitted or untracked files. Commit, stash, or remove them (or remove $InstallDir and rerun for a clean install)."
-    }
+        # Refuse to clobber uncommitted local changes inside the install dir.
+        # Covers tracked-modified (diff), staged (diff --cached), AND
+        # untracked files not gitignored. Without the untracked check, a
+        # user's personal note or experimental file dropped into the install
+        # dir would be silently wiped by `git reset --hard`.
+        # `--exclude-standard` respects .gitignore, so briefs/<client>/ and
+        # .env remain invisible here.
+        & git -C "$InstallDir" diff --quiet *> $null
+        $dirty = ($LASTEXITCODE -ne 0)
+        & git -C "$InstallDir" diff --cached --quiet *> $null
+        $staged = ($LASTEXITCODE -ne 0)
+        $untracked = (& git -C "$InstallDir" ls-files --others --exclude-standard 2>$null)
+        if ($dirty -or $staged -or $untracked) {
+            Fail "Refusing to update: $InstallDir has uncommitted or untracked files. Commit, stash, or remove them (or remove $InstallDir and rerun for a clean install)."
+        }
 
-    # Refuse to switch branches silently on a detached HEAD.
-    $branch = (& git -C "$InstallDir" symbolic-ref --short HEAD 2>$null)
-    if (-not $branch) {
-        Fail "Refusing to update: $InstallDir is on a detached HEAD. Check out a branch first, or remove $InstallDir and rerun."
+        # Refuse to switch branches silently on a detached HEAD.
+        $branch = (& git -C "$InstallDir" symbolic-ref --short HEAD 2>$null)
+        if (-not $branch) {
+            Fail "Refusing to update: $InstallDir is on a detached HEAD. Check out a branch first, or remove $InstallDir and rerun."
+        }
+    } finally {
+        $ErrorActionPreference = $prevEAP
     }
 
     Backup-Briefs $InstallDir
@@ -155,6 +232,12 @@ function Main {
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
         Fail "git is required but not found. Install git for Windows and try again."
     }
+
+    # Refuse system paths, UNC/device forms, 8.3 short names, and paths with
+    # .. traversal BEFORE doing any filesystem work. Protects an admin-level
+    # install from mistakenly creating a skills directory under Windows,
+    # System32, Program Files, or other shared roots.
+    Test-SafeInstallPath $InstallDir
 
     # Pre-flight writability check. Catches custom LSS_INSTALL_DIR pointing
     # somewhere the user can't write before git or Move-Item give cryptic

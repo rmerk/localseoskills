@@ -78,7 +78,9 @@ update_existing() {
   case "$origin_url" in
     "$REPO_URL"|"${REPO_URL%.git}"|"${REPO_URL%.git}.git"|\
     git@github.com:garrettjsmith/localseoskills|\
-    git@github.com:garrettjsmith/localseoskills.git)
+    git@github.com:garrettjsmith/localseoskills.git|\
+    ssh://git@github.com/garrettjsmith/localseoskills|\
+    ssh://git@github.com/garrettjsmith/localseoskills.git)
       ;;
     *)
       fail "Refusing to update: $INSTALL_DIR exists but its origin ($origin_url) is not $REPO_URL. Remove $INSTALL_DIR manually and rerun, or unset LSS_INSTALL_DIR." ;;
