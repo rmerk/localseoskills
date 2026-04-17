@@ -311,7 +311,7 @@ function Main {
         Write-Host "     persistent brief for ongoing work."
         Write-Host ""
         Write-Host "Docs:      https://github.com/garrettjsmith/localseoskills"
-        Write-Host "Community: https://discord.com/invite/XxVjjuhn"
+        Write-Host "Community: https://discord.gg/dBtF26Ga2a"
     } finally {
         # Only release the lock if THIS process acquired it.
         if ($lockOwned -and (Test-Path $lockPath)) {

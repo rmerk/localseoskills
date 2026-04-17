@@ -199,7 +199,7 @@ Next steps:
      brief for ongoing work.
 
 Docs:      https://github.com/garrettjsmith/localseoskills
-Community: https://discord.com/invite/XxVjjuhn
+Community: https://discord.gg/dBtF26Ga2a
 EOF
 }
 

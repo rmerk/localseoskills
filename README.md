@@ -311,7 +311,7 @@ With Local SEO Skills fully configured:
 
 ## Community
 
-Join the [Discord](https://discord.com/invite/XxVjjuhn) for freelancers, consultants, and small agencies using Claude as their operating system for local SEO.
+Join the [Discord](https://discord.gg/dBtF26Ga2a) for freelancers, consultants, and small agencies using Claude as their operating system for local SEO.
 
 Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the skill authoring guide.
 
