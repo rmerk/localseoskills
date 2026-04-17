@@ -239,7 +239,7 @@ Once installed, just ask Claude about local SEO. If you mention a specific busin
 
 ## Community
 
-Join the [Discord](https://discord.com/invite/XxVjjuhn) — freelancers, consultants, and small agencies using Claude as their operating system for local SEO.
+Join the [Discord]((https://discord.gg/BFtGYWBmDw)) — freelancers, consultants, and small agencies using Claude as their operating system for local SEO.
 
 ## License
 
