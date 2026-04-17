@@ -108,9 +108,39 @@ function Install-Fresh {
 
 function Update-Existing {
     Say "Existing install detected at $InstallDir, updating"
-    Backup-Briefs $InstallDir
+
+    # Sanity check: the existing checkout's origin must actually be this repo.
+    # Without this, a misconfigured $env:LSS_INSTALL_DIR pointing at an
+    # unrelated git checkout would get `git reset --hard` against the WRONG
+    # origin's branch, silently destroying the user's work.
+    $originUrl = (& git -C "$InstallDir" remote get-url origin 2>$null)
+    $expected = @(
+        $RepoUrl,
+        ($RepoUrl -replace '\.git$',''),
+        (($RepoUrl -replace '\.git$','') + '.git'),
+        'git@github.com:garrettjsmith/localseoskills',
+        'git@github.com:garrettjsmith/localseoskills.git'
+    )
+    if (-not $originUrl -or -not ($expected -contains $originUrl)) {
+        Fail "Refusing to update: $InstallDir exists but its origin ($originUrl) is not $RepoUrl. Remove $InstallDir manually and rerun, or unset LSS_INSTALL_DIR."
+    }
+
+    # Refuse to clobber uncommitted local changes inside the install dir.
+    & git -C "$InstallDir" diff --quiet *> $null
+    $dirty = ($LASTEXITCODE -ne 0)
+    & git -C "$InstallDir" diff --cached --quiet *> $null
+    $staged = ($LASTEXITCODE -ne 0)
+    if ($dirty -or $staged) {
+        Fail "Refusing to update: $InstallDir has uncommitted changes. Commit or stash them, or remove $InstallDir and rerun for a clean install."
+    }
+
+    # Refuse to switch branches silently on a detached HEAD.
     $branch = (& git -C "$InstallDir" symbolic-ref --short HEAD 2>$null)
-    if (-not $branch) { $branch = "main" }
+    if (-not $branch) {
+        Fail "Refusing to update: $InstallDir is on a detached HEAD. Check out a branch first, or remove $InstallDir and rerun."
+    }
+
+    Backup-Briefs $InstallDir
     Invoke-Git @("-C", $InstallDir, "fetch", "--depth", "1", "origin", $branch)
     Invoke-Git @("-C", $InstallDir, "reset", "--hard", "origin/$branch")
 }

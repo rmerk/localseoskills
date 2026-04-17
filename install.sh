@@ -68,9 +68,35 @@ install_fresh() {
 
 update_existing() {
   say "Existing install detected at $INSTALL_DIR, updating"
-  backup_briefs "$INSTALL_DIR"
+
+  # Sanity check: the existing checkout's origin must actually be this repo.
+  # Without this, a misconfigured LSS_INSTALL_DIR pointing at an unrelated
+  # git checkout would get `git reset --hard` against the WRONG origin's
+  # branch, silently destroying the user's work.
+  local origin_url
+  origin_url="$(git -C "$INSTALL_DIR" remote get-url origin 2>/dev/null || echo '')"
+  case "$origin_url" in
+    "$REPO_URL"|"${REPO_URL%.git}"|"${REPO_URL%.git}.git"|\
+    git@github.com:garrettjsmith/localseoskills|\
+    git@github.com:garrettjsmith/localseoskills.git)
+      ;;
+    *)
+      fail "Refusing to update: $INSTALL_DIR exists but its origin ($origin_url) is not $REPO_URL. Remove $INSTALL_DIR manually and rerun, or unset LSS_INSTALL_DIR." ;;
+  esac
+
+  # Refuse to clobber uncommitted local changes inside the install dir.
+  if ! git -C "$INSTALL_DIR" diff --quiet || ! git -C "$INSTALL_DIR" diff --cached --quiet; then
+    fail "Refusing to update: $INSTALL_DIR has uncommitted changes. Commit or stash them, or remove $INSTALL_DIR and rerun for a clean install."
+  fi
+
+  # Refuse to switch branches silently on a detached HEAD.
   local branch
-  branch="$(git -C "$INSTALL_DIR" symbolic-ref --short HEAD 2>/dev/null || echo main)"
+  if ! branch="$(git -C "$INSTALL_DIR" symbolic-ref --short HEAD 2>/dev/null)"; then
+    fail "Refusing to update: $INSTALL_DIR is on a detached HEAD. Check out a branch first, or remove $INSTALL_DIR and rerun."
+  fi
+
+  backup_briefs "$INSTALL_DIR"
+
   if ! git -C "$INSTALL_DIR" fetch --depth 1 origin "$branch"; then
     fail "git fetch failed. Check your network connection and try again."
   fi
