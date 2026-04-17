@@ -1,59 +1,67 @@
 # Skill Versions
 
-## Strategy & Optimization Skills
+Pulled from each `skills/*/SKILL.md` frontmatter. Bumped per skill as its SKILL.md or supporting content changes.
 
-| Skill | Version | Last Updated |
-|-------|---------|-------------|
-| gbp-optimization | 1.2.0 | 2026-03-01 |
-| gbp-posts | 1.1.0 | 2026-03-01 |
-| gbp-suspension-recovery | 1.1.0 | 2026-03-01 |
-| gbp-api-automation | 1.1.0 | 2026-03-01 |
-| geogrid-analysis | 1.2.0 | 2026-03-01 |
-| local-seo-audit | 1.2.0 | 2026-03-01 |
-| local-competitor-analysis | 1.1.0 | 2026-03-01 |
-| local-reporting | 1.1.0 | 2026-03-01 |
-| local-landing-pages | 1.2.0 | 2026-03-01 |
-| service-area-seo | 1.1.0 | 2026-03-01 |
-| review-management | 1.2.0 | 2026-03-01 |
-| local-citations | 1.1.0 | 2026-03-01 |
-| local-link-building | 1.1.0 | 2026-03-01 |
-| local-schema | 1.1.0 | 2026-03-01 |
-| lsa-ads | 1.1.0 | 2026-03-01 |
-| local-search-ads | 1.1.0 | 2026-03-01 |
-| local-ppc-ads | 1.1.0 | 2026-03-01 |
-| apple-business-connect | 1.1.0 | 2026-03-01 |
-| bing-places | 1.1.0 | 2026-03-01 |
-| ai-local-search | 1.1.0 | 2026-03-01 |
-| multi-location-seo | 1.1.0 | 2026-03-01 |
-| client-deliverables | 1.1.0 | 2026-03-01 |
-| local-keyword-research | 1.2.0 | 2026-03-01 |
+## Meta
 
-## Tool Skills
+| Skill | Version |
+|-------|---------|
+| brief | 3.0.0 |
 
-| Skill | Version | Last Updated |
-|-------|---------|-------------|
-| local-falcon-tool | 1.0.0 | 2026-03-01 |
-| lsa-spy-tool | 1.0.0 | 2026-03-01 |
-| serpapi-tool | 1.0.0 | 2026-03-01 |
-| semrush-tool | 1.0.0 | 2026-03-01 |
-| ahrefs-tool | 1.0.0 | 2026-03-01 |
-| brightlocal-tool | 1.0.0 | 2026-03-01 |
-| dataforseo-tool | 1.0.0 | 2026-03-01 |
-| google-search-console-tool | 1.0.0 | 2026-03-01 |
-| google-analytics-tool | 1.0.0 | 2026-03-01 |
-| screaming-frog-tool | 1.0.0 | 2026-03-01 |
-| whitespark-tool | 1.0.0 | 2026-03-01 |
+## Strategy Skills (26)
 
-## v1.3.0 — LocalSEOData Integration
+| Skill | Version |
+|-------|---------|
+| ai-local-search | 1.0.0 |
+| apple-business-connect | 1.0.0 |
+| bing-places | 1.0.0 |
+| client-deliverables | 1.0.0 |
+| dispatch | 1.0.0 |
+| gbp-api-automation | 1.0.0 |
+| gbp-optimization | 1.1.0 |
+| gbp-posts | 1.0.0 |
+| gbp-suspension-recovery | 1.0.0 |
+| geogrid-analysis | 1.1.0 |
+| local-citations | 1.0.0 |
+| local-competitor-analysis | 1.0.0 |
+| local-content-briefs | 1.0.0 |
+| local-content-strategy | 1.0.0 |
+| local-keyword-research | 1.1.0 |
+| local-landing-pages | 1.1.0 |
+| local-link-building | 1.0.0 |
+| local-ppc-ads | 1.0.0 |
+| local-reporting | 1.1.0 |
+| local-schema | 1.0.0 |
+| local-search-ads | 1.0.0 |
+| local-seo-audit | 1.1.0 |
+| lsa-ads | 1.0.0 |
+| multi-location-seo | 1.0.0 |
+| review-management | 1.1.0 |
+| service-area-seo | 1.0.0 |
 
-**New:**
-- Added `localseodata-tool` skill — 36 endpoints covering SERP data, audits, reviews, citations, keywords, AI visibility, competitor analysis, geogrid scans, and more
-- LocalSEOData is now the default data source for all LocalSEOSkills
+## Tool Skills (12)
 
-**Updated:**
-- `docs/tool-routing` — rewritten to position LocalSEOData as primary, other tools as specialists for gaps
-- `skills/dispatch` — all request patterns now route to LocalSEOData first
-- 13 strategy skills updated with LocalSEOData data source blocks: `local-seo-audit`, `geogrid-analysis`, `review-management`, `local-citations`, `local-competitor-analysis`, `local-keyword-research`, `ai-local-search`, `local-reporting`, `gbp-optimization`, `local-link-building`, `service-area-seo`, `multi-location-seo`, `lsa-ads`, `client-deliverables`
-- 7 tool skills updated with LocalSEOData relationship notes: `serpapi-tool`, `dataforseo-tool`, `brightlocal-tool`, `whitespark-tool`, `local-falcon-tool`, `semrush-tool`, `ahrefs-tool`
+| Skill | Version |
+|-------|---------|
+| ahrefs-tool | 1.0.0 |
+| brightlocal-tool | 1.0.0 |
+| dataforseo-tool | 1.0.0 |
+| google-analytics-tool | 1.0.0 |
+| google-search-console-tool | 1.0.0 |
+| local-falcon-tool | 1.0.0 |
+| localseodata-tool | 1.0.0 |
+| lsa-spy-tool | 1.0.0 |
+| screaming-frog-tool | 1.0.0 |
+| semrush-tool | 1.0.0 |
+| serpapi-tool | 1.0.0 |
+| whitespark-tool | 1.0.0 |
 
-**Package stats:** 36 skills, 12 tool integrations, 9,000+ lines of expertise
+## v1.0.0 — Initial public release
+
+**Package stats:** 38 skills (26 strategy + 12 tool) + 1 meta skill (`brief`), 15 scheduled task templates, 12 supported MCP providers.
+
+**Prior milestones (pre-v1.0.0):**
+- `brief` meta skill promoted to 3.0.0 (session state + first-run setup + brand brief + cross-location rollup).
+- Added 3 strategy skills: `local-content-briefs`, `local-content-strategy`, `dispatch`.
+- `localseodata-tool` integration — LocalSEOData (36 endpoints) is now the default data source. 13 strategy skills updated with LocalSEOData data source blocks; 7 tool skills updated with relationship notes.
+- `docs/tool-routing` rewritten to position LocalSEOData as primary, other tools as specialists for gaps.

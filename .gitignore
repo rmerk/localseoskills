@@ -10,5 +10,8 @@ briefs/*/
 .env
 .env.*
 
+# Per-contributor tooling — not part of the distributed package
+.claude/
+
 # Private lessons
 meta/lessons-private.md
