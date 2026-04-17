@@ -21,7 +21,20 @@ $ErrorActionPreference = "Stop"
 
 try { [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new() } catch {}
 
-$InstallDir = if ($env:LSS_INSTALL_DIR) { $env:LSS_INSTALL_DIR } else { Join-Path $HOME ".claude\skills\localseoskills" }
+# If LSS_INSTALL_DIR is set, it must be non-empty. An empty-but-set env var
+# is almost always an accident (wrapper script typo, expansion-to-nothing)
+# and silently falling through to the default would mask a real bug. Prefer
+# failing loudly so the caller can fix it. If the env var is not set at all,
+# use the default install location.
+$InstallDir = if (Test-Path Env:LSS_INSTALL_DIR) {
+    if ([string]::IsNullOrWhiteSpace($env:LSS_INSTALL_DIR)) {
+        Write-Host "x LSS_INSTALL_DIR is set but empty. Unset it to use the default install location." -ForegroundColor Red
+        exit 1
+    }
+    $env:LSS_INSTALL_DIR
+} else {
+    Join-Path $HOME ".claude\skills\localseoskills"
+}
 
 function Say($msg)  { Write-Host "> $msg" -ForegroundColor Green }
 function Fail($msg) { Write-Host "x $msg" -ForegroundColor Red; exit 1 }
@@ -128,8 +141,15 @@ function Test-SafePath {
     # These syntactic forms bypass drive-letter blocklist comparisons and
     # can route Remove-Item through namespaces that ignore junction
     # safeguards.
-    if ($Path -match '^\\\\') {
-        Fail "Refusing to operate on UNC or device path: $Path"
+    #
+    # IMPORTANT: match any leading backslash, not just `\\`. A real-Windows
+    # regression showed that \\?\ / \\.\ / \\host\share inputs sometimes
+    # arrive here with one leading `\` stripped (PowerShell normalizes the
+    # form at the env-var / process boundary on 5.1). The classic `^\\\\`
+    # regex missed those. No legitimate install path on Windows starts
+    # with a backslash, so refuse `^\` broadly.
+    if ($Path -match '^\\') {
+        Fail "Refusing to operate on UNC, device-namespace, or backslash-rooted path: $Path"
     }
 
     # Build the dangerous list dynamically from environment variables so

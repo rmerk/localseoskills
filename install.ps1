@@ -24,7 +24,18 @@ $ErrorActionPreference = "Stop"
 try { [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new() } catch {}
 
 $RepoUrl    = "https://github.com/garrettjsmith/localseoskills.git"
-$InstallDir = if ($env:LSS_INSTALL_DIR) { $env:LSS_INSTALL_DIR } else { Join-Path $HOME ".claude\skills\localseoskills" }
+# If LSS_INSTALL_DIR is set, it must be non-empty. An empty-but-set env var
+# is almost always an accident (wrapper script typo, expansion-to-nothing)
+# and silently falling through to the default would mask a real bug.
+$InstallDir = if (Test-Path Env:LSS_INSTALL_DIR) {
+    if ([string]::IsNullOrWhiteSpace($env:LSS_INSTALL_DIR)) {
+        Write-Host "x LSS_INSTALL_DIR is set but empty. Unset it to use the default install location." -ForegroundColor Red
+        exit 1
+    }
+    $env:LSS_INSTALL_DIR
+} else {
+    Join-Path $HOME ".claude\skills\localseoskills"
+}
 
 function Say($msg)  { Write-Host "> $msg" -ForegroundColor Green }
 function Fail($msg) { Write-Host "x $msg" -ForegroundColor Red; exit 1 }
@@ -49,8 +60,12 @@ function Test-SafeInstallPath {
     if ($forward -match '(?i)(^|/)[A-Z0-9]{1,6}~[0-9]+(\.[A-Z0-9]{1,3})?(/|$)') {
         Fail "Refusing to install to 8.3 short-name path: $Path (use the long form)"
     }
-    if ($Path -match '^\\\\') {
-        Fail "Refusing to install to UNC or device path: $Path"
+    # Match any leading backslash, not just `\\`. Real-Windows regression
+    # showed PowerShell 5.1 normalizes `\\?\` to `\?\` at env-var / process
+    # boundaries, so `^\\\\` missed UNC / device / admin-share inputs. No
+    # legitimate install path on Windows starts with a backslash.
+    if ($Path -match '^\\') {
+        Fail "Refusing to install to UNC, device-namespace, or backslash-rooted path: $Path"
     }
 
     $blocked = @(
