@@ -1,3 +1,6 @@
+# macOS
+.DS_Store
+
 # Private work files — never commit client data
 briefs/*/
 !briefs/_templates/
