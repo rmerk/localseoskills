@@ -101,6 +101,16 @@ main() {
     if [ -z "$trusted_home" ] && [ -r /etc/passwd ]; then
       trusted_home="$(/usr/bin/awk -F: -v u="$current_user" '$1==u {print $6}' /etc/passwd)"
     fi
+    # Last-resort fallback: if dscl/getent/passwd all failed (happens on
+    # LDAP-only Linux or NIS boxes where the passwd db isn't in /etc/passwd),
+    # accept $HOME IF AND ONLY IF the current user actually owns it. An
+    # attacker-set HOME=/Library fails `-O` because /Library is owned by
+    # root, so this cannot restore the HOME-override bypass. Without this
+    # fallback, LDAP-only users would be unable to uninstall via the default
+    # path because their trusted_home never resolves.
+    if [ -z "$trusted_home" ] && [ -n "${HOME:-}" ] && [ -O "$HOME" ]; then
+      trusted_home="$HOME"
+    fi
   fi
   trusted_home="${trusted_home%/}"
 
