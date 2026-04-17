@@ -1,6 +1,9 @@
 ---
 name: dispatch
 description: Quick-reference for which skills to load together based on what the user is asking. Load this FIRST when a local SEO request comes in and you're unsure which skills to activate. This prevents loading all skills when you only need 2-3.
+metadata:
+  version: 1.0.0
+  author: Garrett Smith
 ---
 
 # Skill Dispatch Guide
