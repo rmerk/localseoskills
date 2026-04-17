@@ -43,7 +43,10 @@ function Test-SafeInstallPath {
     if ($forward -match '(^|/)\.\.(/|$)') {
         Fail "Refusing to install to path with .. traversal: $Path"
     }
-    if ($forward -match '(^|/)[^/]*~\d') {
+    # True 8.3 short-name alias only: 1-6 base chars + tilde + digits,
+    # optional 1-3 char extension. Anchored to segment boundaries so
+    # legit filenames with tilde suffix (e.g. draft~1-notes.md) pass.
+    if ($forward -match '(?i)(^|/)[A-Z0-9]{1,6}~[0-9]+(\.[A-Z0-9]{1,3})?(/|$)') {
         Fail "Refusing to install to 8.3 short-name path: $Path (use the long form)"
     }
     if ($Path -match '^\\\\') {
@@ -248,7 +251,11 @@ function Main {
             New-Item -ItemType Directory -Path $parent -Force -ErrorAction Stop | Out-Null
         }
         $probe = Join-Path $parent (".lss-writable-probe-" + [System.Guid]::NewGuid().ToString("N").Substring(0,8))
-        New-Item -ItemType File -Path $probe -Force -ErrorAction Stop | Out-Null
+        # No -Force: if the 8-char GUID-suffixed probe path collides with an
+        # existing file (astronomically unlikely but possible), we want the
+        # collision to fail the probe rather than silently clobber. The
+        # -ErrorAction Stop makes collision throw into the catch.
+        New-Item -ItemType File -Path $probe -ErrorAction Stop | Out-Null
         Remove-Item -Path $probe -Force -ErrorAction SilentlyContinue
     } catch {
         Fail "$parent is not writable by this user. Set `$env:LSS_INSTALL_DIR to a user-writable path, or rerun with appropriate permissions."

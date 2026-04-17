@@ -115,7 +115,12 @@ function Test-SafePath {
     # Refuse any 8.3 short-name segment (e.g. PROGRA~1, WINDOW~1). These
     # alias into system paths but string-compare unequal to the long form:
     # C:\PROGRA~1 would bypass a blocklist containing C:\Program Files.
-    if ($forward -match '(^|/)[^/]*~\d') {
+    # Match true Windows 8.3 short-name aliases only: 1-6 base chars +
+    # tilde + digits, optionally followed by a 1-3 char extension.
+    # Anchored to path-segment boundaries so regular filenames like
+    # `draft~1-notes.md` or `backup~2` don't trigger. Case-insensitive
+    # because 8.3 is uppercase by convention but NTFS is case-insensitive.
+    if ($forward -match '(?i)(^|/)[A-Z0-9]{1,6}~[0-9]+(\.[A-Z0-9]{1,3})?(/|$)') {
         Fail "Refusing to operate on 8.3 short-name path: $Path (use the long form)"
     }
 

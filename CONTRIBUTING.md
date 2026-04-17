@@ -36,6 +36,8 @@ If you use Claude Code to contribute, disable co-authorship trailers before comm
 
 Add this to `~/.claude/settings.json` (global) or `.claude/settings.json` (project).
 
+The repo-local `.claude/` directory is gitignored, so the project-level settings file is not checked in. Create it locally if you want it; it will not appear in `git status`.
+
 ## PR Checklist
 
 - [ ] `name` matches directory name

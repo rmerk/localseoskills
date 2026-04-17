@@ -410,8 +410,6 @@ Businesses on managed website platforms (InboundMD, Scorpion, Yext Sites, etc.) 
 - Scope your recommendations to what's actually implementable
 - Flag platform limitations in the audit report so the client knows WHY certain fixes require their vendor
 
----
-
 ## Output Format
 
 ### Audit Report Structure
@@ -476,8 +474,6 @@ Each audit finding should connect to the specific skill that addresses it:
 3. What keywords/services matter most?
 4. What geographic area needs coverage?
 5. Any known issues or recent changes?
-
----
 
 ## What to Do Next
 
