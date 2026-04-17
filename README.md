@@ -57,16 +57,20 @@ Most skill libraries stop at instructions. Local SEO Skills adds the three thing
 
 Pick the path for your setup. However you install, the 38 skills end up where your agent can find them.
 
-### Claude Desktop or Claude.ai in Chrome (recommended)
-
-Open Settings → Customize → Plugins → add marketplace `garrettjsmith/localseoskills` → install **local-seo-skills**. Three clicks.
-
-### Claude Code (CLI)
+### Claude Code (CLI, recommended)
 
 ```bash
 /plugin marketplace add garrettjsmith/localseoskills
 /plugin install local-seo-skills@garrettjsmith-localseo
 ```
+
+Full brief experience. Claude reads and writes `briefs/` on your filesystem, so history compounds automatically across sessions.
+
+### Claude Desktop or Claude.ai in Chrome
+
+Open Settings → Customize → Plugins → add marketplace `garrettjsmith/localseoskills` → install **local-seo-skills**. Three clicks.
+
+Briefs require filesystem access. In Desktop, Claude can read and write briefs in any folder you grant access to; in Claude.ai in the browser, briefs are session-scoped and you paste them back into your Project between sessions. For the full persistent-brief experience, use Claude Code (CLI).
 
 ### Terminal one-liner (macOS / Linux)
 
