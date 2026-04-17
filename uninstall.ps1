@@ -81,24 +81,74 @@ function Test-SafePath {
     if ($Path.Length -lt 10) {
         Fail "Refusing to operate on suspiciously short path: $Path"
     }
-    $dangerous = @(
+    # Refuse outright if the path contains any `..` segment. Path traversal
+    # makes the final target ambiguous and can defeat Resolve-Path when
+    # intermediate segments don't exist.
+    $normalized = $Path -replace '\\','/'
+    if ($normalized -match '(^|/)\.\.(/|$)') {
+        Fail "Refusing to operate on path with .. traversal: $Path"
+    }
+    # Build the dangerous list dynamically from environment variables so
+    # corporate Windows installs (OneDrive-redirected home, non-C: system
+    # drive, localized Program Files) are covered without hardcoding. Then
+    # union with the static POSIX and Windows top-level paths any LSS user
+    # could plausibly pass through cross-platform PS Core.
+    $envDangerous = @(
         $HOME,
         (Join-Path $HOME ""),
-        "C:\", "D:\", "E:\", "F:\",
+        $env:USERPROFILE,
+        $env:PUBLIC,
+        $env:SystemDrive,
+        $env:SystemRoot,
+        $env:ProgramFiles,
+        ${env:ProgramFiles(x86)},
+        $env:ProgramData,
+        $env:LOCALAPPDATA,
+        $env:APPDATA,
+        $env:OneDrive,
+        $env:OneDriveCommercial,
+        $env:OneDriveConsumer
+    )
+    # Enumerate every local + network drive root instead of hardcoding C-F.
+    $driveRoots = @()
+    try { $driveRoots = [System.IO.DriveInfo]::GetDrives() | ForEach-Object { $_.Name.TrimEnd('\','/') + '\' } } catch {}
+
+    $staticDangerous = @(
+        "C:\", "C:\Windows", "C:\Windows\System32", "C:\Windows\SysWOW64",
+        "C:\Users", "C:\Users\Public",
+        "C:\Program Files", "C:\Program Files (x86)", "C:\ProgramData",
+        # POSIX (cross-platform PS Core + WSL scenarios)
         "/", "/root", "/home", "/Users",
         "/usr", "/etc", "/var", "/tmp",
         "/bin", "/sbin", "/opt", "/boot",
         "/dev", "/proc", "/sys", "/lib",
-        "/mnt", "/srv",
-        $env:USERPROFILE,
-        $env:SystemDrive,
-        $env:SystemRoot,
-        "C:\Windows",
-        "C:\Users",
-        "C:\Program Files",
-        "C:\Program Files (x86)",
-        "C:\ProgramData"
-    ) | Where-Object { $_ }
+        "/mnt", "/srv", "/run", "/media", "/snap",
+        # macOS
+        "/Library", "/System", "/Applications", "/private",
+        "/cores", "/Volumes", "/Network", "/.vol"
+    )
+
+    $dangerous = @($envDangerous + $driveRoots + $staticDangerous) | Where-Object { $_ }
+
+    # Reject UNC, device-namespace, and extended-length paths outright. These
+    # syntactic forms bypass drive-letter blocklist comparisons and can route
+    # Remove-Item through namespaces that ignore junction safeguards.
+    if ($Path -match '^\\\\') {
+        Fail "Refusing to operate on UNC or device path: $Path"
+    }
+
+    # Reject a path that is itself a reparse point (symlink or junction).
+    # Remove-Item -Recurse on a junction can cross into the target on older
+    # PowerShell; refusing up front is safer than relying on Remove-Item's
+    # behavior across versions.
+    try {
+        $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+        if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            Fail "Refusing to operate on a reparse point (symlink or junction): $Path"
+        }
+    } catch {
+        # Path doesn't exist yet; skip the reparse check, rely on blocklist.
+    }
 
     # Check both the raw input and the Resolve-Path result. Resolve-Path
     # canonicalizes .. segments and symlinks; without this, an attacker can

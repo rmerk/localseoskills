@@ -42,10 +42,30 @@ main() {
   # accidents like LSS_INSTALL_DIR=/ or LSS_INSTALL_DIR=$HOME followed by
   # --force, plus traversal attacks like LSS_INSTALL_DIR=$HOME/../../usr.
   local resolved stripped
-  # Resolve the parent via cd + pwd, then re-attach basename. When pwd is "/"
-  # this produces "//basename"; tr -s '/' collapses repeated slashes so the
-  # comparison against the blocklist is reliable.
-  resolved="$(cd "$(dirname "$INSTALL_DIR")" 2>/dev/null && pwd)/$(basename "$INSTALL_DIR")" || resolved="$INSTALL_DIR"
+  # Refuse outright if INSTALL_DIR contains any `..` segment. Path traversal
+  # makes the final target ambiguous and bypasses the in-home fast-allow
+  # when realpath can't canonicalize (non-existent targets). There is no
+  # legitimate reason for an install dir path to include `..`.
+  case "/$INSTALL_DIR/" in
+    */../*) fail "Refusing to operate on path with .. traversal: $INSTALL_DIR" ;;
+  esac
+  # Refuse outright if INSTALL_DIR itself is a symlink. A symlink whose target
+  # is a system path would pass the resolved-path check (we'd see the target),
+  # but `rm -rf` on the symlink follows it and deletes the target's contents.
+  if [ -L "$INSTALL_DIR" ]; then
+    fail "Refusing to operate on a symlink: $INSTALL_DIR"
+  fi
+  # Prefer realpath/readlink -f when available so symlinks in the path are
+  # resolved to their real targets before blocklist comparison. Falls back to
+  # cd + pwd, which resolves symlinks on macOS/Linux but not `/./` segments;
+  # tr -s '/' collapses repeated slashes so the comparison is reliable.
+  if command -v realpath >/dev/null 2>&1; then
+    resolved="$(realpath "$INSTALL_DIR" 2>/dev/null)" || resolved="$INSTALL_DIR"
+  elif readlink -f "$INSTALL_DIR" >/dev/null 2>&1; then
+    resolved="$(readlink -f "$INSTALL_DIR")"
+  else
+    resolved="$(cd "$(dirname "$INSTALL_DIR")" 2>/dev/null && pwd)/$(basename "$INSTALL_DIR")" || resolved="$INSTALL_DIR"
+  fi
   resolved="$(printf '%s' "$resolved" | tr -s '/')"
   resolved="${resolved%/}"
   [ -z "$resolved" ] && resolved="/"
@@ -55,14 +75,52 @@ main() {
   stripped="${INSTALL_DIR%/}"
   [ -z "$stripped" ] && stripped="/"
 
-  # Check BOTH the raw input and the resolved path against the blocklist, so
-  # attacks that normalize to a system root are caught.
-  for candidate in "$stripped" "$resolved"; do
-    case "$candidate" in
-      /|""|/root|/home|/Users|/usr|/etc|/var|/tmp|/bin|/sbin|/opt|/boot|/dev|/proc|/sys|/lib|/mnt|/srv)
-        fail "Refusing to operate on dangerous path: $INSTALL_DIR (resolves to $candidate)" ;;
-    esac
-  done
+  # Match case-insensitively so macOS (HFS+/APFS default is case-insensitive)
+  # can't bypass with `$HOME/../../LIBRARY`. No-op on Linux where the FS is
+  # case-sensitive anyway. shopt is bash-specific and already required by
+  # `set -euo pipefail` on line 13.
+  shopt -s nocasematch
+
+  # Fast-allow: if the resolved path is strictly inside the current user's
+  # home subtree, it's a legitimate location and we only need the home-dir
+  # equality check below. Without this shortcut the prefix blocklist would
+  # refuse the default `/Users/<user>/.claude/...` because /Users is in the
+  # list. Compared against the resolved form (not raw), so a traversal like
+  # `$HOME/../../Users` (resolves to `/Users`) does NOT hit the fast-allow.
+  local inside_home=0
+  if [ -n "${HOME:-}" ] && [[ "$resolved" == "${HOME%/}"/* ]]; then
+    inside_home=1
+  fi
+
+  # Blocklist covers:
+  #   - POSIX: /, /root, /home, /usr, /etc, /var, /tmp, /bin, /sbin, /opt,
+  #     /boot, /dev, /proc, /sys, /lib, /mnt, /srv, /run, /media,
+  #     /lost+found, /snap, /selinux, /sysroot
+  #   - macOS: /Users, /Library, /System, /Applications, /private, /cores,
+  #     /Volumes, /Network, /.vol
+  # Check BOTH equality and prefix-with-slash (so /System/Library and any
+  # path nested under a blocklisted root is also refused). Reviews caught
+  # an earlier bypass via `$HOME/../../Library` (missing from the original
+  # list) and a second bypass via `/System/Library` (nested inside a
+  # blocklisted root but not itself on the list); prefix matching plus the
+  # expanded list closes both classes.
+  local blocklist=(
+    / /root /home /Users
+    /usr /etc /var /tmp /bin /sbin /opt /boot /dev /proc /sys /lib /mnt /srv
+    /run /media /lost+found /snap /selinux /sysroot
+    /Library /System /Applications /private /cores /Volumes /Network /.vol
+  )
+  if [ "$inside_home" -eq 0 ]; then
+    for candidate in "$stripped" "$resolved"; do
+      [ -z "$candidate" ] && fail "Refusing to operate on empty path"
+      for blocked in "${blocklist[@]}"; do
+        if [ "$candidate" = "$blocked" ] || [[ "$candidate" == "$blocked"/* ]]; then
+          fail "Refusing to operate on dangerous path: $INSTALL_DIR (resolves to $candidate, inside blocklisted $blocked)"
+        fi
+      done
+    done
+  fi
+  shopt -u nocasematch
 
   if [ "${#stripped}" -lt 10 ]; then
     fail "Refusing to operate on suspiciously short path: $INSTALL_DIR"
@@ -85,6 +143,12 @@ main() {
   fi
 
   if [ "$BACKUP" -eq 1 ] && [ -d "$INSTALL_DIR/briefs" ]; then
+    # Refuse to copy if briefs is a symlink: `cp -a` would follow the top-level
+    # link and silently back up whatever it points at, potentially landing a
+    # copy of an unrelated directory outside the install tree.
+    if [ -L "$INSTALL_DIR/briefs" ]; then
+      fail "Refusing to back up briefs: $INSTALL_DIR/briefs is a symlink"
+    fi
     local ts dst n
     ts="$(date +%Y%m%d-%H%M%S)"
     dst="${HOME}/.claude/lss-briefs-backup-${ts}"
