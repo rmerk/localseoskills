@@ -76,19 +76,43 @@ main() {
   [ -z "$stripped" ] && stripped="/"
 
   # Match case-insensitively so macOS (HFS+/APFS default is case-insensitive)
-  # can't bypass with `$HOME/../../LIBRARY`. No-op on Linux where the FS is
-  # case-sensitive anyway. shopt is bash-specific and already required by
-  # `set -euo pipefail` on line 13.
+  # can't bypass with `$HOME/../../LIBRARY`. Uses bash's [[ ]] so the flag
+  # actually applies (POSIX `[ = ]` ignores shopt). No-op on Linux where the
+  # FS is case-sensitive anyway. shopt is bash-specific and already required
+  # by `set -euo pipefail` on line 13.
   shopt -s nocasematch
 
-  # Fast-allow: if the resolved path is strictly inside the current user's
-  # home subtree, it's a legitimate location and we only need the home-dir
-  # equality check below. Without this shortcut the prefix blocklist would
+  # Trusted home directory. A prior review found that the fast-allow check
+  # below was gate-kept by `$HOME`, which is attacker-controllable: running
+  # `HOME=/Library bash uninstall.sh` made the fast-allow think `/Library/...`
+  # was a legitimate in-home path and skipped the blocklist entirely. Resolve
+  # the real home from `id -un` via `dscl` (macOS) / `getent` (Linux) /
+  # `/etc/passwd` (fallback). If we cannot resolve a trusted home, the
+  # fast-allow is disabled and every path is subjected to the blocklist.
+  local current_user trusted_home=""
+  current_user="$(id -un 2>/dev/null || echo '')"
+  if [ -n "$current_user" ]; then
+    if command -v dscl >/dev/null 2>&1; then
+      trusted_home="$(dscl . -read "/Users/$current_user" NFSHomeDirectory 2>/dev/null | /usr/bin/awk '/^NFSHomeDirectory:/ {print $2}')"
+    fi
+    if [ -z "$trusted_home" ] && command -v getent >/dev/null 2>&1; then
+      trusted_home="$(getent passwd "$current_user" 2>/dev/null | cut -d: -f6)"
+    fi
+    if [ -z "$trusted_home" ] && [ -r /etc/passwd ]; then
+      trusted_home="$(/usr/bin/awk -F: -v u="$current_user" '$1==u {print $6}' /etc/passwd)"
+    fi
+  fi
+  trusted_home="${trusted_home%/}"
+
+  # Fast-allow: resolved path must be strictly inside the trusted home and
+  # not equal to it. Without this shortcut, the prefix blocklist below would
   # refuse the default `/Users/<user>/.claude/...` because /Users is in the
-  # list. Compared against the resolved form (not raw), so a traversal like
-  # `$HOME/../../Users` (resolves to `/Users`) does NOT hit the fast-allow.
+  # list. The fast-allow runs AGAINST THE RESOLVED FORM, so a traversal like
+  # `$HOME/../../Users` (resolves to `/Users`) does not hit it. If
+  # trusted_home could not be resolved, inside_home stays 0 and the blocklist
+  # applies unconditionally.
   local inside_home=0
-  if [ -n "${HOME:-}" ] && [[ "$resolved" == "${HOME%/}"/* ]]; then
+  if [ -n "$trusted_home" ] && [[ "$resolved" == "$trusted_home"/* ]] && [ "$resolved" != "$trusted_home" ]; then
     inside_home=1
   fi
 
@@ -98,12 +122,12 @@ main() {
   #     /lost+found, /snap, /selinux, /sysroot
   #   - macOS: /Users, /Library, /System, /Applications, /private, /cores,
   #     /Volumes, /Network, /.vol
-  # Check BOTH equality and prefix-with-slash (so /System/Library and any
-  # path nested under a blocklisted root is also refused). Reviews caught
-  # an earlier bypass via `$HOME/../../Library` (missing from the original
-  # list) and a second bypass via `/System/Library` (nested inside a
-  # blocklisted root but not itself on the list); prefix matching plus the
-  # expanded list closes both classes.
+  # Match with [[ ]] (not [ ]) so `shopt -s nocasematch` applies to both the
+  # equality and prefix branches: `[ "$a" = "$b" ]` is case-sensitive under
+  # nocasematch and caused a confirmed bypass against `/LOST+FOUND` on the
+  # previous revision. Check BOTH equality and prefix-with-slash (so
+  # /System/Library and any path nested under a blocklisted root is also
+  # refused).
   local blocklist=(
     / /root /home /Users
     /usr /etc /var /tmp /bin /sbin /opt /boot /dev /proc /sys /lib /mnt /srv
@@ -114,7 +138,7 @@ main() {
     for candidate in "$stripped" "$resolved"; do
       [ -z "$candidate" ] && fail "Refusing to operate on empty path"
       for blocked in "${blocklist[@]}"; do
-        if [ "$candidate" = "$blocked" ] || [[ "$candidate" == "$blocked"/* ]]; then
+        if [[ "$candidate" == "$blocked" ]] || [[ "$candidate" == "$blocked"/* ]]; then
           fail "Refusing to operate on dangerous path: $INSTALL_DIR (resolves to $candidate, inside blocklisted $blocked)"
         fi
       done
