@@ -84,9 +84,16 @@ update_existing() {
       fail "Refusing to update: $INSTALL_DIR exists but its origin ($origin_url) is not $REPO_URL. Remove $INSTALL_DIR manually and rerun, or unset LSS_INSTALL_DIR." ;;
   esac
 
-  # Refuse to clobber uncommitted local changes inside the install dir.
-  if ! git -C "$INSTALL_DIR" diff --quiet || ! git -C "$INSTALL_DIR" diff --cached --quiet; then
-    fail "Refusing to update: $INSTALL_DIR has uncommitted changes. Commit or stash them, or remove $INSTALL_DIR and rerun for a clean install."
+  # Refuse to clobber uncommitted local changes inside the install dir. Covers
+  # tracked-modified (diff), staged (diff --cached), AND untracked files that
+  # are not gitignored. Without the untracked check, a user's personal note or
+  # experimental file dropped into the install dir would be silently wiped by
+  # `git reset --hard`. The `--exclude-standard` flag respects .gitignore, so
+  # briefs/<client>/ (gitignored) and .env remain invisible to this check.
+  if ! git -C "$INSTALL_DIR" diff --quiet \
+      || ! git -C "$INSTALL_DIR" diff --cached --quiet \
+      || [ -n "$(git -C "$INSTALL_DIR" ls-files --others --exclude-standard 2>/dev/null)" ]; then
+    fail "Refusing to update: $INSTALL_DIR has uncommitted or untracked files. Commit, stash, or remove them (or remove $INSTALL_DIR and rerun for a clean install)."
   fi
 
   # Refuse to switch branches silently on a detached HEAD.

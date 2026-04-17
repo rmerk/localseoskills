@@ -126,12 +126,18 @@ function Update-Existing {
     }
 
     # Refuse to clobber uncommitted local changes inside the install dir.
+    # Covers tracked-modified (diff), staged (diff --cached), AND untracked
+    # files not gitignored. Without the untracked check, a user's personal
+    # note or experimental file dropped into the install dir would be
+    # silently wiped by `git reset --hard`. `--exclude-standard` respects
+    # .gitignore, so briefs/<client>/ and .env remain invisible here.
     & git -C "$InstallDir" diff --quiet *> $null
     $dirty = ($LASTEXITCODE -ne 0)
     & git -C "$InstallDir" diff --cached --quiet *> $null
     $staged = ($LASTEXITCODE -ne 0)
-    if ($dirty -or $staged) {
-        Fail "Refusing to update: $InstallDir has uncommitted changes. Commit or stash them, or remove $InstallDir and rerun for a clean install."
+    $untracked = (& git -C "$InstallDir" ls-files --others --exclude-standard 2>$null)
+    if ($dirty -or $staged -or $untracked) {
+        Fail "Refusing to update: $InstallDir has uncommitted or untracked files. Commit, stash, or remove them (or remove $InstallDir and rerun for a clean install)."
     }
 
     # Refuse to switch branches silently on a detached HEAD.
