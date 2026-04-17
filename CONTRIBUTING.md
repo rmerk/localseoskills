@@ -36,7 +36,18 @@ If you use Claude Code to contribute, disable co-authorship trailers before comm
 
 Add this to `~/.claude/settings.json` (global) or `.claude/settings.json` (project).
 
-The repo-local `.claude/` directory is gitignored, so the project-level settings file is not checked in. Create it locally if you want it; it will not appear in `git status`.
+The project-level `.claude/settings.json` is checked into this repo with `coauthorship: false`, so commits authored through Claude Code from a clone of this repo preserve single authorship by default. If you use a global `~/.claude/settings.json` as well, the project-level file takes precedence inside this directory.
+
+## Testing install / uninstall safely
+
+Never run `install.sh` or `uninstall.sh` with `--force` against a real path you care about. Recommended sandbox:
+
+1. Clone into `/tmp/lss-test`
+2. Point `LSS_INSTALL_DIR` at a disposable path inside `/tmp`
+3. Exercise the dangerous-input battery listed in `SECURITY.md` first — every entry must refuse before the happy path is tested
+4. For local end-to-end runs, pipe confirmation in (`echo "yes" | bash uninstall.sh`) rather than passing `--force`
+
+While developing the guard itself, substitute `echo "WOULD RUN: ..."` for any destructive line so a bug in the guard can't wipe anything.
 
 ## PR Checklist
 

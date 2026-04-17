@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: Shellcheck install / uninstall
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y shellcheck
+          shellcheck install.sh uninstall.sh
+
+  guard-regression:
+    name: Uninstall guard regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dangerous inputs must be refused
+        shell: bash
+        run: |
+          set -u
+          fail_count=0
+          inputs=(
+            "/"
+            "$HOME"
+            "/Users"
+            "/etc"
+            "/usr"
+            "/var"
+            "/bin"
+            "$HOME/../../usr"
+            "$HOME/../../Users"
+            "/opt"
+            "/tmp"
+          )
+
+          for input in "${inputs[@]}"; do
+            echo "=== LSS_INSTALL_DIR=$input ==="
+            # Pipe "no" so if the guard ever fails to refuse, the interactive
+            # prompt aborts the run instead of proceeding to rm -rf.
+            output="$(LSS_INSTALL_DIR="$input" bash uninstall.sh 2>&1 <<< "no" || true)"
+            echo "$output"
+
+            if echo "$output" | grep -qE "Refusing to operate (on dangerous path|on your home directory|on suspiciously short path)"; then
+              echo "OK: refused"
+            else
+              echo "FAIL: guard did not refuse $input"
+              fail_count=$((fail_count + 1))
+            fi
+            echo ""
+          done
+
+          if [ "$fail_count" -gt 0 ]; then
+            echo "Guard regression: $fail_count dangerous inputs were NOT refused."
+            exit 1
+          fi
+          echo "All dangerous inputs refused."
+
+      - name: Short-path refusal
+        shell: bash
+        run: |
+          output="$(LSS_INSTALL_DIR="/x" bash uninstall.sh 2>&1 <<< "no" || true)"
+          echo "$output"
+          echo "$output" | grep -q "suspiciously short path" || {
+            echo "FAIL: guard did not refuse short path /x"
+            exit 1
+          }
+
+  happy-path:
+    name: Install / uninstall happy path
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install into disposable prefix
+        shell: bash
+        run: |
+          set -euo pipefail
+          export LSS_INSTALL_DIR="$RUNNER_TEMP/lss-happy/install"
+          bash install.sh
+          test -f "$LSS_INSTALL_DIR/AGENTS.md" || {
+            echo "FAIL: install did not produce AGENTS.md"
+            exit 1
+          }
+          echo "Install OK at $LSS_INSTALL_DIR"
+
+      - name: Uninstall and confirm briefs backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          export LSS_INSTALL_DIR="$RUNNER_TEMP/lss-happy/install"
+
+          # Seed a fake brief so the backup path is exercised.
+          mkdir -p "$LSS_INSTALL_DIR/briefs/_ci-test"
+          echo "ci placeholder" > "$LSS_INSTALL_DIR/briefs/_ci-test/brief.md"
+
+          echo "yes" | bash uninstall.sh
+
+          if [ -e "$LSS_INSTALL_DIR" ]; then
+            echo "FAIL: install dir still exists after uninstall"
+            exit 1
+          fi
+
+          # Backup dir lives at $HOME/.claude/lss-briefs-backup-*
+          if ! ls "$HOME/.claude/lss-briefs-backup-"* >/dev/null 2>&1; then
+            echo "FAIL: uninstall did not back up briefs"
+            exit 1
+          fi
+          echo "Uninstall OK; briefs backed up."
