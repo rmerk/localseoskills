@@ -10,7 +10,7 @@ Do not open a public GitHub issue for security problems.
 
 Preferred channel: [private vulnerability report](https://github.com/garrettjsmith/localseoskills/security/advisories/new) via GitHub Security Advisories.
 
-Fallback: DM a maintainer on the [community Discord](https://discord.com/invite/XxVjjuhn).
+Fallback: DM a maintainer on the [community Discord](https://discord.gg/BFtGYWBmDw).
 
 Expect an initial response within 72 hours. Critical issues (RCE, credential exposure, destructive shell behavior) are triaged first.
 
@@ -54,10 +54,10 @@ Both the raw input and the resolved absolute path must be checked. The 2026-04-1
 
 Never run install or uninstall scripts with `--force` against a real path you care about. Recommended sandbox:
 
-1. Clone the repo into `/tmp`
-2. Set `LSS_INSTALL_DIR` to a disposable path inside `/tmp`
+1. Clone the repo anywhere disposable (e.g. `$HOME/lss-dev-sandbox/clone`)
+2. Set `LSS_INSTALL_DIR` to a disposable path **under `$HOME`** (e.g. `$HOME/lss-dev-sandbox/install`). The uninstall guard refuses top-level system directories like `/tmp`, `/opt`, `/var`, and bare `/Users` or `/home`; it only allows paths inside your own `$HOME`.
 3. Exercise the guard with known-dangerous inputs (`/`, `$HOME`, `/etc`, `$HOME/../../Users`, etc.) and confirm each one refuses before reaching any `rm`
-4. Only then test the happy path against a real install dir
+4. Only then test the happy path against your sandbox install dir
 
 If you use Claude Code to run these tests, the session-level bash guard (`bash-guard.py`) blocks `uninstall*.sh --force` by default as a defense-in-depth layer. Substitute the prompt-driven form (`echo "yes" | bash uninstall.sh`) when you need to exercise the real uninstall path.
 

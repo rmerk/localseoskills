@@ -42,8 +42,8 @@ The project-level `.claude/settings.json` is checked into this repo with `coauth
 
 Never run `install.sh` or `uninstall.sh` with `--force` against a real path you care about. Recommended sandbox:
 
-1. Clone into `/tmp/lss-test`
-2. Point `LSS_INSTALL_DIR` at a disposable path inside `/tmp`
+1. Clone into a disposable path under `$HOME` (e.g. `$HOME/lss-dev-sandbox/clone`)
+2. Point `LSS_INSTALL_DIR` at a disposable path **under `$HOME`** — e.g. `$HOME/lss-dev-sandbox/install`. The uninstall guard refuses top-level system paths like `/tmp`, `/opt`, and `/var`; it only allows paths inside your own `$HOME`. See `SECURITY.md` for the full blocklist.
 3. Exercise the dangerous-input battery listed in `SECURITY.md` first — every entry must refuse before the happy path is tested
 4. For local end-to-end runs, pipe confirmation in (`echo "yes" | bash uninstall.sh`) rather than passing `--force`
 
