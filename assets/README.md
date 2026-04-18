@@ -10,7 +10,7 @@ Source files for the Local SEO Skills visual identity. The main README pulls `co
 | `logo-mark.png` / `@2x.png` | 512 / 1024 | App icons, GitHub avatar |
 | `logo-mark-256.png` / `-128.png` | 256 / 128 | Smaller avatars, UI placements |
 | `favicon-64.png` / `-32.png` | 64 / 32 | Site favicon |
-| `wordmark.svg` | vector | Master `LocalSEOSkills` wordmark lockup |
+| `wordmark.svg` | vector | Master `Local SEO Skills` wordmark lockup |
 | `wordmark.png` / `@2x.png` | 1200x260 / 2400x520 | Banners, slides, email headers |
 | `cover.svg` | vector | Master GitHub cover / README hero |
 | `cover.png` / `@2x.png` | 1280x640 / 2560x1280 | README hero (referenced from root README) |

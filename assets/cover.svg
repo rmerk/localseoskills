@@ -39,13 +39,13 @@
     </g>
   </g>
 
-  <!-- Wordmark (matches site: LocalSEOSkills, concatenated, "SEO" in green) -->
+  <!-- Wordmark: three-word brand form "Local SEO Skills", "SEO" in green -->
   <text x="80" y="310"
         font-family="Plus Jakarta Sans"
         font-weight="800"
         font-size="112"
         letter-spacing="-3.4"
-        fill="#0F172A">Local<tspan fill="#16A34A">SEO</tspan>Skills</text>
+        fill="#0F172A">Local <tspan fill="#16A34A">SEO</tspan> Skills</text>
 
   <!-- Tagline -->
   <text x="80" y="378"
