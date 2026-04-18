@@ -25,10 +25,27 @@ The skills do not make network calls themselves. They instruct the host agent (C
 Typical MCP providers the skills ask the host to call:
 
 - **LocalSEOData** (default) — sends business name, address, keyword, and location to `https://localseodata.com`. See their privacy policy for retention.
-- **Local Falcon, BrightLocal, Whitespark, Semrush, Ahrefs, SerpAPI, DataForSEO, Screaming Frog** — each has its own privacy terms; connecting them is your choice.
+- **Local Falcon** — each has its own privacy terms; connecting it is your choice.
+- **BrightLocal** — each has its own privacy terms; connecting it is your choice.
+- **Whitespark** — each has its own privacy terms; connecting it is your choice.
+- **Semrush** — each has its own privacy terms; connecting it is your choice.
+- **Ahrefs** — each has its own privacy terms; connecting it is your choice.
+- **SerpAPI** — each has its own privacy terms; connecting it is your choice.
+- **DataForSEO** — each has its own privacy terms; connecting it is your choice.
+- **Screaming Frog** — each has its own privacy terms; connecting it is your choice.
 - **Google Search Console, Google Analytics** — OAuth scoped to the properties you grant.
 
 If you've wired a non-standard MCP (e.g. a local LLM, a scraper), the skills will use whatever you've configured.
+
+## Data Roles
+
+Local SEO Skills is software you install and run in your own environment. Under GDPR, CCPA, and similar regimes, the roles break down as:
+
+- **You are the data controller** for any client or business data you store in `briefs/` or send through MCP calls.
+- **The MCP providers you connect (LocalSEOData, BrightLocal, Google, etc.)** are data processors for data you route through them. Review their own DPAs and privacy policies.
+- **We are not a controller or processor** of any data that flows through your installation. This repo contains no code that transmits data to us or any third party on our behalf.
+
+If you need a Data Processing Agreement for the MCP providers, contact them directly. If you need documentation for a vendor review, this policy and the upstream providers' DPAs are the relevant artifacts.
 
 ## What the host agent sees
 
@@ -53,4 +70,4 @@ The first line backs up `briefs/` and removes the install directory. The second 
 
 ## Changes to this policy
 
-Material changes are announced in `CHANGELOG.md` and via a pinned issue. Minor wording fixes are not.
+Material changes are announced in `CHANGELOG.md` and in release notes. Minor wording fixes are not.
