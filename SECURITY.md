@@ -36,18 +36,6 @@ Out of scope:
 - Issues that require physical access or an already-compromised shell
 - Social-engineering a maintainer
 
-## Safe Harbor
-
-We consider security research and vulnerability disclosure activities conducted consistent with this policy to be authorized conduct under the Computer Fraud and Abuse Act (CFAA), the Digital Millennium Copyright Act (DMCA), and applicable anti-hacking laws. We will not initiate legal action against researchers for accidentally or in good faith violating this policy.
-
-Researchers who follow this policy are authorized to:
-
-- Test against paths and inputs under their own control (never against another person's install)
-- Reverse-engineer the install and uninstall scripts to audit their behavior
-- Report findings via the channels listed above
-
-If a third party initiates legal action against a researcher acting in good faith under this policy, we will make reasonable efforts to make clear that the activity was authorized.
-
 ## Hardening Guidance for Contributors
 
 ### Destructive scripts
