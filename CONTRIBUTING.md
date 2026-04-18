@@ -36,7 +36,7 @@ If you use Claude Code to contribute, disable co-authorship trailers before comm
 
 Add this to `~/.claude/settings.json` (global) or `.claude/settings.json` (project).
 
-The project-level `.claude/settings.json` is checked into this repo with `coauthorship: false`, so commits authored through Claude Code from a clone of this repo preserve single authorship by default. If you use a global `~/.claude/settings.json` as well, the project-level file takes precedence inside this directory.
+The project-level `.claude/settings.json` is checked into this repo with `coauthorship: false`, so commits authored through Claude Code from a clone of this repo preserve single authorship by default. If you use a global `~/.claude/settings.json` as well, the project-level file applies inside this directory.
 
 ## Testing install / uninstall safely
 
