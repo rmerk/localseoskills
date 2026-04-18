@@ -43,12 +43,12 @@ Out of scope:
 Install and uninstall scripts must refuse to operate on:
 
 - The filesystem root (`/`)
-- Any top-level system directory (`/etc`, `/usr`, `/var`, `/bin`, `/sbin`, `/opt`, `/tmp`, `/Users`, `/home`, etc.)
-- The user's `$HOME`
-- Paths shorter than 10 characters
-- Paths containing `..` traversal segments that normalize to any of the above
+- Any top-level system directory (`/etc`, `/usr`, `/var`, `/bin`, `/sbin`, `/opt`, `/tmp`, `/root`, and bare `/Users` or `/home`) — note that paths *inside* the current user's `$HOME` are allowed via a home-dir carve-out, which is what lets the default install at `~/.claude/skills/localseoskills` work
+- The user's `$HOME` directory itself (as opposed to paths beneath it)
+- Raw input paths shorter than 10 characters (after trailing-slash normalization)
+- Paths containing `..` traversal segments (refused outright — the guard does not attempt to resolve them)
 
-Both the raw input and the resolved absolute path must be checked. The 2026-04-16 hardening pass added a dual-candidate blocklist (raw + resolved) plus a `..`-normalization step in `uninstall.sh`; keep that pattern in new scripts.
+Both the raw input and the resolved absolute path are checked against the blocklist (dual-candidate match). Keep that pattern in new scripts.
 
 ### Testing destructive scripts
 
@@ -63,4 +63,4 @@ If you use Claude Code to run these tests, the session-level bash guard (`bash-g
 
 ### CI
 
-The `.github/workflows/ci.yml` workflow runs the dangerous-input battery on every PR that touches install or uninstall scripts. A guard regression there blocks the merge.
+The `.github/workflows/ci.yml` workflow runs the dangerous-input battery on every PR to `main`. A guard regression blocks the merge.
