@@ -9,6 +9,8 @@
   <a href="https://agentskills.io/specification.md"><img alt="Agent Skills spec" src="https://img.shields.io/badge/Agent%20Skills-spec-16A34A"/></a>
 </p>
 
+# Open-Source Claude SEO Tool for Local Search
+
 <p align="center">
   <strong>38 open-source skills that turn Claude into a local SEO specialist.</strong><br/>
   Connect your data tools, describe a business, Claude audits it, monitors it, reports on it, and executes.
@@ -322,6 +324,16 @@ Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the skill auth
 Issues and feature requests: [GitHub Issues](https://github.com/garrettjsmith/localseoskills/issues).
 
 Support: [help@localseoskills.com](mailto:help@localseoskills.com).
+
+---
+
+## Security & Privacy
+
+Vulnerability reports: see [SECURITY.md](SECURITY.md). For a private channel, use [GitHub Security Advisories](https://github.com/garrettjsmith/localseoskills/security/advisories/new).
+
+Data handling (what the skills read/write, what leaves your machine, what doesn't): see [PRIVACY.md](PRIVACY.md).
+
+Contributor guide: see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ---
 
