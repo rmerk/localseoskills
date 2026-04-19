@@ -204,7 +204,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $env:LSS_INSTALL_DIR = "$env:RUNNER_TEMP\lss-happy\install"
+          $env:LSS_INSTALL_DIR = "$env:USERPROFILE\lss-happy\install"
           ./install.ps1
           if (-not (Test-Path "$env:LSS_INSTALL_DIR\AGENTS.md")) {
             Write-Host "FAIL: install did not produce AGENTS.md"
@@ -216,7 +216,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $env:LSS_INSTALL_DIR = "$env:RUNNER_TEMP\lss-happy\install"
+          $env:LSS_INSTALL_DIR = "$env:USERPROFILE\lss-happy\install"
 
           # Seed a fake brief so the backup path is exercised.
           $briefDir = Join-Path $env:LSS_INSTALL_DIR 'briefs\_ci-test'
