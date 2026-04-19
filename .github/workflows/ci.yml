@@ -50,7 +50,7 @@ jobs:
             output="$(LSS_INSTALL_DIR="$input" bash uninstall.sh 2>&1 <<< "no" || true)"
             echo "$output"
 
-            if echo "$output" | grep -qE "Refusing to operate (on dangerous path|on your home directory|on suspiciously short path)"; then
+            if echo "$output" | grep -qE "Refusing to (operate|back up)"; then
               echo "OK: refused"
             else
               echo "FAIL: guard did not refuse $input"
@@ -194,6 +194,11 @@ jobs:
             exit 1
           }
           Write-Host "All dangerous inputs refused."
+          # The inner pwsh invocation exits 1 on each expected refusal, leaving
+          # $LASTEXITCODE = 1 in the outer shell. GitHub's pwsh step wrapper
+          # uses $LASTEXITCODE as the step's exit code, so without this the
+          # step fails despite every assertion passing.
+          exit 0
 
       - name: Install into disposable prefix
         shell: pwsh
