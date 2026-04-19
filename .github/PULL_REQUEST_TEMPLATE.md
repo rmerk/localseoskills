@@ -37,7 +37,7 @@ Closes #
 - [ ] Guard refuses `/`, `$HOME`, top-level system dirs, and `..`-traversal inputs
 - [ ] Both raw input and resolved path are checked against the blocklist
 - [ ] Length floor and home-dir guard still present
-- [ ] Tested from a clean `/tmp` clone against the dangerous-input battery in `SECURITY.md`
+- [ ] Tested from a clean `$HOME/lss-dev-sandbox` clone against the dangerous-input battery in `SECURITY.md`
 - [ ] CI `ci.yml` passes
 
 </details>

@@ -164,25 +164,24 @@ jobs:
             'C:\Users'
           )
 
-          foreach ($input in $inputs) {
-            Write-Host "=== LSS_INSTALL_DIR=$input ==="
-            $env:LSS_INSTALL_DIR = $input
+          foreach ($inputPath in $inputs) {
+            Write-Host "=== LSS_INSTALL_DIR=$inputPath ==="
+            $env:LSS_INSTALL_DIR = $inputPath
             $refused = $false
             try {
-              $output = & pwsh -NoProfile -Command "`$env:LSS_INSTALL_DIR = '$input'; 'no' | ./uninstall.ps1 2>&1" 2>&1 | Out-String
+              $output = & pwsh -NoProfile -Command "`$env:LSS_INSTALL_DIR = '$inputPath'; 'no' | ./uninstall.ps1 2>&1" 2>&1 | Out-String
               Write-Host $output
-              if ($LASTEXITCODE -ne 0 -or $output -match 'Refusing to operate|dangerous path|home directory|suspiciously short') {
+              if ($output -match 'Refusing to operate|dangerous path|home directory|suspiciously short') {
                 $refused = $true
               }
             } catch {
-              Write-Host "Exception: $_"
-              $refused = $true
+              Write-Host "Exception (not treated as a refusal): $_"
             }
 
             if ($refused) {
               Write-Host "OK: refused"
             } else {
-              Write-Host "FAIL: guard did not refuse $input"
+              Write-Host "FAIL: guard did not refuse $inputPath"
               $failCount++
             }
             Write-Host ""
