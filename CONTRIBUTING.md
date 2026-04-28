@@ -19,10 +19,36 @@
 ## Style Guide
 
 - Direct, instructional tone
-- Second person ("You are an expert in...")
+- Second person when writing SKILL.md — address the agent directly ("You are an expert in..."). CONTRIBUTING.md, SECURITY.md, and README.md use normal third-person prose.
 - Specific over vague — include real examples
 - Bold for key terms, code blocks for templates
 - No fluff or filler
+
+## Claude Code Settings
+
+If you use Claude Code to contribute, disable co-authorship trailers before committing:
+
+```json
+{
+  "coauthorship": false
+}
+```
+
+Add this to `~/.claude/settings.json` (global) or `.claude/settings.json` (project).
+
+The project-level `.claude/settings.json` is checked into this repo with `coauthorship: false`, so commits authored through Claude Code from a clone of this repo preserve single authorship by default. If you use a global `~/.claude/settings.json` as well, the project-level file applies inside this directory.
+
+## Inbound Licensing (DCO)
+
+By contributing to this repository, you certify the [Developer Certificate of Origin](https://developercertificate.org/) — in short, that you wrote the contribution or have the right to submit it under the project's MIT license.
+
+Sign commits off with `git commit -s`, which appends a `Signed-off-by:` trailer with your name and email. Commits without a sign-off can still be reviewed but may be asked to re-sign before merge.
+
+If you contribute through Claude Code, the project-level `.claude/settings.json` keeps the author single (no Claude co-author trailer) — sign-off still lands on your authored commit normally.
+
+## Testing install / uninstall safely
+
+See the "Testing destructive scripts" section in [SECURITY.md](SECURITY.md#testing-destructive-scripts) for sandbox guidance and the dangerous-input battery. Exercise that battery before testing any happy path.
 
 ## PR Checklist
 
@@ -30,4 +56,5 @@
 - [ ] `description` is 1-1024 chars with trigger phrases
 - [ ] SKILL.md under 500 lines
 - [ ] No sensitive data or credentials
+- [ ] Co-authorship trailers disabled (see above)
 - [ ] Tested with Claude Code

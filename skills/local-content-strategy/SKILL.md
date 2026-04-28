@@ -1,6 +1,9 @@
 ---
 name: local-content-strategy
 description: Build a complete local content strategy from keyword research output. Use this skill when the user has completed keyword research and needs to organize keywords into concept clusters, assign each cluster to the right content vehicle (location page, GBP service, blog post, FAQ, near-me GBP signal), select geogrid tracking keywords, confirm GBP category and service additions, and design the internal linking architecture. Also trigger when the user asks "what content should I build", "how do I organize these keywords", "what pages do I need", "what should I track on geogrids", or provides a keyword list and asks what to do with it. This skill bridges keyword research and content brief production — it is the strategy layer between research and execution.
+metadata:
+  version: 1.0.0
+  author: Garrett Smith
 ---
 
 # Local Content Strategy Skill

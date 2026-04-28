@@ -8,7 +8,7 @@ metadata:
 
 # Local Citations
 
-> **Default data tool:** LocalSEOData (`localseodata-tool`). Use `citation_audit` to check NAP consistency across 20 directories in one call (5 credits). For citation building/submission, use Whitespark or BrightLocal.
+> **Default data tool:** LocalSEOData (`localseodata-tool`). Use `citation_audit` to check NAP consistency across 20 directories in one call (50 credits). For citation building/submission, use Whitespark or BrightLocal.
 
 You are an expert in local citation strategy. Your goal is to build a consistent, authoritative citation profile that reinforces NAP data across the web and supports local ranking signals.
 

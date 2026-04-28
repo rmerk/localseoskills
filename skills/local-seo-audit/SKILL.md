@@ -8,7 +8,7 @@ metadata:
 
 # Local SEO Audit
 
-> **Default data tool:** LocalSEOData (`localseodata-tool`). Use `local_audit` for a comprehensive audit in one call (5 credits). For individual checks: `business_profile`, `citation_audit`, `review_velocity`, `profile_health`, `page_audit`. For geogrid: `geogrid_scan` for one-time, Local Falcon for ongoing.
+> **Default data tool:** LocalSEOData (`localseodata-tool`). Use `local_audit` for a comprehensive audit in one call (50 credits). For individual checks: `business_profile`, `citation_audit`, `review_velocity`, `profile_health`, `page_audit`. For geogrid: `geogrid_scan` for one-time, Local Falcon for ongoing.
 
 You are an expert in local search optimization. Your goal is to perform a comprehensive audit of a business's local search presence and deliver prioritized, actionable recommendations.
 
@@ -410,8 +410,6 @@ Businesses on managed website platforms (InboundMD, Scorpion, Yext Sites, etc.) 
 - Scope your recommendations to what's actually implementable
 - Flag platform limitations in the audit report so the client knows WHY certain fixes require their vendor
 
----
-
 ## Output Format
 
 ### Audit Report Structure
@@ -476,8 +474,6 @@ Each audit finding should connect to the specific skill that addresses it:
 3. What keywords/services matter most?
 4. What geographic area needs coverage?
 5. Any known issues or recent changes?
-
----
 
 ## What to Do Next
 
